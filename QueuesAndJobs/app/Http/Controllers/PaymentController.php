@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\PaymentJob;
 use App\Mail\PaymentSend;
 use App\Models\Payment;
 use App\Models\User;
@@ -14,28 +15,31 @@ class PaymentController extends Controller
 {
     public function payment(Request $request)
     {
-        $getUserPayment = User::where('id', $request->id_client)->first();
+        $payment = new Payment();
+        $payment->id_client   = $request->id_client;
+        $payment->document    = $request->document;
+        $payment->name        = $request->name;
+        $payment->email       = $request->email;
+        $payment->description = $request->description;
+        $payment->status      = $request->status;
+        $payment->price       = $request->price;
+        $payment->save();
 
-        if(isset($getUserPayment)) {
-            $payment = new Payment();
+        $processingPayment = $this->processingPayment($payment);
+    }
 
-            $payment->id_client   = $request->id_client;
-            $payment->document    = $request->document;
-            $payment->name        = $getUserPayment->name;
-            $payment->description = $request->description;
-            $payment->status      = $request->status;
-            $payment->price       = $request->price;
-
-            $defaultEmail = '';
-
-            try {
-                Mail::to($defaultEmail, 'Queue Test - Laravel')->send(new PaymentSend(
-                    ['fromEmail' => $defaultEmail, 'dataEmail'   => $payment]
-                ));
-                return ['data' => ['code' => 200, 'message' => 'Send email success!']];
-            } catch(Exception $e) {
-                return ['data' => ['code' => 403, 'message' => $e]];
-            }
+    private function processingPayment($payment)
+    {
+        try {
+            PaymentJob::dispatch($payment);
+            return 'Success';
+        } catch(Exception $e) {
+            return 'Error';
         }
+    }
+
+    private function paymentConfirmed()
+    {
+
     }
 }

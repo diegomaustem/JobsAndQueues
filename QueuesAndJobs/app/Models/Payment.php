@@ -12,6 +12,7 @@ class Payment extends Model
     protected $fillable = [
         'id_client',
         'name',
+        'email',
         'document',
         'description',
         'status',

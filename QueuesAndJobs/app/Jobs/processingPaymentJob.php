@@ -1,10 +1,8 @@
 <?php
 
 namespace App\Jobs;
-
-use App\Mail\PaymentSend;
+use App\Mail\sendProcessingPayment;
 use App\Models\Payment;
-use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -12,7 +10,8 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
 
-class PaymentJob implements ShouldQueue
+
+class processingPaymentJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -22,6 +21,6 @@ class PaymentJob implements ShouldQueue
 
     public function handle()
     {
-        Mail::to($this->payment->email)->send(new PaymentSend($this->payment));
+        Mail::to($this->payment->email)->send(new sendProcessingPayment($this->payment));
     }
 }

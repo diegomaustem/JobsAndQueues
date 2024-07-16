@@ -4,13 +4,14 @@ namespace App\Mail;
 
 use App\Models\Payment;
 use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class PaymentSend extends Mailable
+class sendProcessingPayment extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -22,14 +23,14 @@ class PaymentSend extends Mailable
     {
         return new Envelope(
             from: new Address($this->payment->email, $this->payment->description),
-            subject: $this->payment->document
+            subject: 'Processing Payment'
         );
     }
 
     public function content()
     {
         return new Content(
-            view: 'mails.bodyEmail',
+            view: 'mails.processingPayment',
         );
     }
 

@@ -2,14 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\PaymentJob;
-use App\Mail\PaymentSend;
+use App\Jobs\paymentConfirmedJob;
+use App\Jobs\processingPaymentJob;
 use App\Models\Payment;
-use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
 
 class PaymentController extends Controller
 {
@@ -26,20 +23,29 @@ class PaymentController extends Controller
         $payment->save();
 
         $processingPayment = $this->processingPayment($payment);
+
+        if($processingPayment->status == 'success') {
+            $this->paymentConfirmed($payment);
+        }
     }
 
     private function processingPayment($payment)
     {
         try {
-            PaymentJob::dispatch($payment);
-            return 'Success';
+            processingPaymentJob::dispatch($payment)->onQueue('processingPayment');
+            return (object) ['code' => 200, 'status' => 'success', 'message' => 'Processing payment'];
         } catch(Exception $e) {
-            return 'Error';
+            return (object) ['code' => 403, 'status' => 'error', 'message' => 'Error, processing payment'];
         }
     }
 
-    private function paymentConfirmed()
+    private function paymentConfirmed($payment)
     {
-
+        try {
+            paymentConfirmedJob::dispatch($payment)->onQueue('paymentConfirmed')->delay(now()->addSeconds(5));
+            return (object) ['code' => 200, 'status' => 'success', 'message' => 'Payment confirmed'];
+        } catch(Exception $e) {
+            return (object) ['code' => 403, 'status' => 'error', 'message' => 'Error, confirmed payment'];
+        }
     }
 }
